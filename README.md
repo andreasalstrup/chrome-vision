@@ -16,3 +16,7 @@ conda env list
 conda activate cv
 # conda deactivate
 ```
+4. Run
+```bash
+python3 object_detection.py
+```
