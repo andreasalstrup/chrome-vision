@@ -20,3 +20,7 @@ conda activate cv
 ```bash
 python3 object_detection.py
 ```
+
+---
+The data folder is in .gitignore so download cityscapes yourself ;)
+To create an index file go into the folder in the terminal and use the following command: "ls >> index.csv"
