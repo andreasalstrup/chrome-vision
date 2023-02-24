@@ -2,8 +2,7 @@ import os
 import pandas as pd
 from torchvision.io import read_image
 from torch.utils.data import Dataset
-
-FILEPATH = "../data/" + "leftImg8bit/" + "train/" + "bremen/"
+from torch.utils.data import Dataset, DataLoader
 
 class CustomImageDataset(Dataset):
     def __init__(self, annotations_file, img_dir, transform=None, target_transform=None):
@@ -17,10 +16,11 @@ class CustomImageDataset(Dataset):
 
     def __getitem__(self, idx):        
         img_path = os.path.join(self.img_dir, self.img_names.iloc[idx, 0])
-        image = read_image(img_path)       
+        image = read_image(img_path)        
         if self.transform:
             image = self.transform(image)
-        return image
+        return image.float()
 
-# Example of how to initialize a dataset:
-# ourDataset = CustomImageDataset("index.csv",FILEPATH)
+bremenTrainingData = CustomImageDataset("index.csv","../data/leftImg8bit/train/bremen/")
+
+bremenTrainingLoader = DataLoader(bremenTrainingData, batch_size=1, shuffle=True)
