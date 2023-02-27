@@ -6,7 +6,7 @@ from torchvision.transforms import ToTensor
 from timeit import default_timer as timer
 from model.evaluation import train_step, test_step, accuracy_fn # use torchmetrics.Accuracy()
 from model.utilis import print_train_time
-from model.chrome_vision import ChromeVisionModel
+from model.chrome_vision import ChromeVisionModel, ChromeVisionModelV2
 from tqdm.auto import tqdm
 from torch.utils.data import DataLoader
 
@@ -76,6 +76,20 @@ model = ChromeVisionModel(
     hidden_units=10,    # Units in the hidden layer
     output_shape=len(class_names) # one for every class
 ).to(device)
+
+# Too slow for my pc
+
+# model = ChromeVisionModelV2(
+#     input_shape=1,      # Color channel: black/white 
+#     hidden_units=10,    # Units in the hidden layer
+#     output_shape=(len(class_names)) # Each class
+# ).to(device)
+
+# Test model2 with random data
+# rand_image_tensor = torch.randn(size=(1, 28, 28))
+# print(rand_image_tensor.shape)
+
+# print(model2(rand_image_tensor.unsqueeze(0).to(device)))
 
 # Setup loss function and optimizer
 loss_fn = nn.CrossEntropyLoss()
