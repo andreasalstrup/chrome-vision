@@ -6,6 +6,8 @@ dependencies:
   - opencv
   - pytorch
   - torchvision
+  - torchaudio
+  - pytorch-cuda=11.6
   - matplotlib
   - seaborn
   - IPython
