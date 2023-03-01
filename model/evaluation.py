@@ -15,8 +15,44 @@ def train_step(model: torch.nn.Module,
    model.train()
 
    # X: image (features), y: label
+   for (y,X) in enumerate(data_loader):
+        # put data on target device    
+        hej = X    
+        X = X[1].to(device)
+
+        # 1. Forward pass
+        y_pred = model(X)
+
+        # 2. Calculate loss (per batch)
+        
+        # 3. Optimizer zero grad
+        #optimizer.zero_grad()
+
+        # 4. Loss backward
+
+        # 5. Optimizer step
+        #optimizer.step()
+
+   # Divide total train loss by length of train dataloader (average loss per batch per epoch)
+   train_loss /= len(data_loader)
+   train_acc /= len(data_loader)
+
+   print(f'Train loss: {train_loss:.5f} | Train acc: {train_acc:.2f}%')
+
+def train_step_label(model: torch.nn.Module, 
+               data_loader: torch.utils.data.DataLoader, 
+               loss_fn: torch.nn.Module,
+               optimizer: torch.optim.Optimizer, 
+               accuracy_fn=accuracy_fn,
+               device: torch.device = device):
+   
+   train_loss, train_acc = 0, 0
+    
+   model.train()
+
+   # X: image (features), y: label
    for batch, (X, y) in enumerate(data_loader):
-        # put data on target device
+        # put data on target device        
         X, y = X.to(device), y.to(device)
 
         # 1. Forward pass
