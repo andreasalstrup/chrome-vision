@@ -7,7 +7,8 @@ dependencies:
   - numpy=1.23.*
   - pandas=1.5.*
   - opencv
-  - pytorch=1.13.0
+  - pytorch=1.13.*
+  - torchvision=0.14.*
   - cudatoolkit=11.4
   - cudnn=8.1
   - matplotlib
@@ -21,5 +22,4 @@ dependencies:
   - pip
   - pip:
     - torch
-    - torchvision==0.14.0
     - torchaudio
