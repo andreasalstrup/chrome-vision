@@ -96,3 +96,117 @@ class ChromeVisionModelV2(nn.Module):
             #print(x.shape)
             x = self.classifier(x)
             return x
+      
+class ChromeCut(nn.Module):
+      def __init__(self, base_encoder, feature_dim=128, queue_size=65536, momentum=0.999, softmax_temp=0.07, mlp=False):
+            """
+            # feature_dim: uique classes in the target dataset
+            # queue_size: number of keys in queue
+            # momentum: controls the rate when applying 'momentum update'. Large value, measn smaller update.
+            # softmat_temp: normalize the contrastive loss
+            # mlp: multilayer perceptron
+            """
+
+            super(ChromeCut, self).__init__()
+
+            self.queue_size = queue_size
+            self.momentum = momentum
+            self.softmax_temp = softmax_temp
+
+            # Create query and key encoder
+            self.encoder_query = base_encoder(num_classes=feature_dim)
+            self.encoder_key = base_encoder(num_classes=feature_dim)
+
+            # Adding MLP Projection Head for representation
+            if mlp:
+                  # Get the dimension of the first fully connected layer 
+                  dim_mlp = self.encoder_query.fc.weight.shape[1]
+
+                  # Setup layers in the query encoder
+                  self.encoder_query.fc = nn.Sequential(
+                        # Create a linear layer
+                        nn.Linear(in_features=dim_mlp, 
+                                  out_features=dim_mlp),
+                        # max(0, out_features)
+                        nn.ReLU(),
+                        # A stack of fully connected layers
+                        self.encoder_query.fc
+                  )
+
+                  # Setup layers in the key encoder
+                  self.encoder_key.fc = nn.Sequential(
+                        # Create a linear layer
+                        nn.Linear(in_features=dim_mlp,
+                                  out_features=dim_mlp),
+                        # max(0, out_features)
+                        nn.ReLU(),
+                        # A stack of fully connected layers
+                        self.encoder_key.fc
+                  )
+            
+            # Sequence query encoder and key encoder as tuples
+            for param_query, param_key in zip(self.encoder_query.parameters(), self.encoder_key.parameters()):
+                  # Initialize key encoder with data from corresponding query encoder 
+                  param_key.data.copy_(param_query.data)
+                  # Initilaze key encoder to not have its gradients computed during backpropagation
+                  param_key.requires_grad = False
+
+            # Create queue
+            # Initialize with random numbers
+            self.register_buffer("queue", torch.randn(feature_dim, queue_size))
+            # Normalize all tensors in the queue
+            self.queue = nn.functional.normalize(input=feature_dim, feature_dim=0)
+
+            # Create queue pointer
+            self.register_buffer("queue_ptr", torch.zeros(size=1, dtype=torch.long))
+      
+      # Take gradients from encoder_query and update parameters in the encoder_key
+      # Make the key encoder processively evolving
+      # Makes momentum contrast (MoCo) more memory efficient
+      def momentum_update(self):
+            # Sequence query encoder and key encoder as tuples
+            for param_query, param_key in zip(self.encoder_query, self.encoder_key):
+                  # Apply momentum update for all tuples
+                  param_key.data = self.momentum * param_key.data + (1 - self.momentum) * param_query.data
+
+      # Maintain the dictionary as a queue of data samples
+      # The current mini-batch is enqueued to the dictionary and the oldest mini-batch in the queue is removed
+      def enqueue_dequeue(self, key):
+            # Get all keys in queue
+            keys = get_keys(key)
+
+            batch_size = keys.shape[0]
+
+            current_ptr = int(self.queue_ptr)
+
+            start_index = current_ptr
+            end_index = current_ptr + batch_size
+            # Preform enqueue and dequeue
+            # Set the new queue. Get all rows
+            self.queue[:, start_index : end_index] = keys.softmax_temp
+
+            # Move the pointer
+            new_ptr = (current_ptr + batch_size) % self.queue_size
+            
+            # Set the new pointer
+            self.queue_ptr[0] = new_ptr
+
+
+      def forward(self, query_batch_images, key_batch_images):
+            logits = 0
+            labels = 0
+            return logits, labels
+      
+def get_keys(tensor):
+
+      # Initialize all tensor element to one
+      tensor_init_one = torch.ones_like(tensor)
+
+      all_tensors = [tensor_init_one for _ in range(torch.distributed.get_world_size())]
+
+      for _ in range(torch.distributed.get_world_size()):
+            torch.ones_like(tensor)
+
+      torch.distributed.all_gather(all_tensors, tensor, async_op=False)
+
+      return torch.cat(all_tensors, dim=0)
