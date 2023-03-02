@@ -4,6 +4,8 @@ from torchvision.io import read_image
 from torch.utils.data import Dataset
 from torch.utils.data import Dataset, DataLoader
 
+batch_size = 3
+
 class CustomImageDataset(Dataset):
     def __init__(self, annotations_file, img_dir, transform=None, target_transform=None):
         self.img_dir = img_dir
@@ -23,4 +25,4 @@ class CustomImageDataset(Dataset):
 
 bremenTrainingData = CustomImageDataset("index.csv","../data/leftImg8bit/train/bremen/")
 
-bremenTrainingLoader = DataLoader(bremenTrainingData, batch_size=1, shuffle=True)
+bremenTrainingLoader = DataLoader(bremenTrainingData, batch_size=batch_size, shuffle=True)

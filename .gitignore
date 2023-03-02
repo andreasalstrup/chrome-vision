@@ -1,6 +1,5 @@
 *.pt
 *.pyc
 data/FashionMNIST
-data
 __pycache__
 .ipynb_checkpoints
