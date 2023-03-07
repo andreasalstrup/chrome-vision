@@ -12,29 +12,20 @@ results = model(image)
 
 count = 0
 print("\ntensor([x1, y1, x2, y2, score, class_id])\n")
-
+boxes = list()
 for result in results.xyxy[0]:
-    x1, y1, x2, y2, score, class_id = result
-    print(result)
+    x1, y1, x2, y2, score, class_id = result    
 
-    startPoint_rectangle = (int(x1), int(y1))
-    endPoint_rectangle = (int(x2), int(y2))
-    color_bgr = (0, 255, 0)
-    thickness = 2
-
-    cv2.rectangle(image, startPoint_rectangle, endPoint_rectangle, color_bgr, thickness)
-    
-    text = f'{model.names[int(class_id)]} {score:.2f}'
-    org = (int(x1), int(y1) - 10)
-    color_bgr = (255, 0, 0)
-    frontScale = 0.5
-
-    cv2.putText(image, text, org, cv2.FONT_HERSHEY_SIMPLEX, frontScale, color_bgr, thickness)
+    ####### Adding the crop to the boxes list
+    croppedImage = image[int(y1):int(y2)-1,int(x1):int(x2)].copy()
+    boxes.append(croppedImage)
 
     count += 1
 
+
 print(f'\nObjects detected: {count}\n')
 
-cv2.imshow('Result', image)
-cv2.waitKey(0)
+for elem in boxes:    
+    cv2.imshow('Result', elem)
+    cv2.waitKey(0)
 cv2.destroyAllWindows()
