@@ -1,6 +1,7 @@
 name: cv
 channels:
   - conda-forge
+  - pytorch
 dependencies:
   - python=3.10.*
   - jupyter
