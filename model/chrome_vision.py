@@ -171,9 +171,9 @@ class ChromeCut(nn.Module):
 
       # Maintain the dictionary as a queue of data samples
       # The current mini-batch is enqueued to the dictionary and the oldest mini-batch in the queue is removed
-      def enqueue_dequeue(self, key):
+      def enqueue_dequeue(self, keys):
             # Get all keys in queue
-            keys = get_keys(key)
+            #keys = get_distributed_keys(keys)
 
             batch_size = keys.shape[0]
 
@@ -193,20 +193,86 @@ class ChromeCut(nn.Module):
 
 
       def forward(self, query_batch_images, key_batch_images):
-            logits = 0
-            labels = 0
+
+            query = self.encoder_query(query_batch_images)
+            query = nn.functional.normalize(query, dim=1)
+
+            with torch.inference_mode():
+                  self.momentum_update()
+
+                  keys = self.encoder_key(key_batch_images)
+                  keys = nn.functional.normalize(keys, dim=1)
+            
+            # Compute logits using the dot product
+            # We measure the similarity (distance) between too vectors
+            # Results in a tenstor, containing the score for each position
+            # Free Indices: Specified in the output
+            # Summation Indices: Indices in the input argument but not in output specification
+            
+            # for n in range(query size)
+            #     total = 0
+            #     for c in range(keys size)
+            #           total += query[n,c]*keys[n,c]
+            #
+            #     positive_logits[n] = total
+            #
+            # Free Indices: n
+            # Summation Indices: c
+            #
+            # Output dimension: Nx1
+            positive_logits = torch.einsum("nc,nc->n", [query, keys])
+
+            # Add a new dimentions at then end of the tensor and make it a 2D tensor
+            positive_logits = positive_logits.unsqueeze(dim=-1)
+
+            # Create a clone of the query thereby not affecting the original tensor or its gradients
+            query_clone = self.queue.clone().detach()
+
+            # for n in range(dim)
+            #     for k in range(dim)
+            #           total = 0
+            #           for c in range(dim)
+            #                 total += query[n,c]*query_clone[c,k]
+            #
+            #     negative_logits[n,k] = total
+            #
+            # Free Indices: nk
+            # Summation Indices: c
+            #
+            # Output dimension: NxK
+            negative_logits = torch.einsum("nc,ck->nk", [query, query_clone])
+
+            # Concatenate positive_logits and negative_logits along the secound dimension (columns)
+            # Output dimension: Nx(1+K), (rows)x(columns)
+            logits = torch.cat([positive_logits, negative_logits], dim=1)
+
+            print(f'positive_logits shape: {positive_logits.shape}\n')
+            print(f'negative_logits shape: {negative_logits.shape}\n')
+            print(f'Logits shape: {logits.shape}\n')
+            
+            # Apply softmax temperature scaling
+            # Deviding softmax_temp with each value in tensor  
+            logits /= self.softmax_temp
+
+            # Instantiate a tensor of zeros of the size logits.shape[0] (rows in logits = number of examples in batch)
+            labels = torch.zeros(logits.shape[0], dtype=torch.long).cuda()
+
+            self.enqueue_dequeue(keys)
+
             return logits, labels
-      
-def get_keys(tensor):
 
-      # Initialize all tensor element to one
-      tensor_init_one = torch.ones_like(tensor)
+@torch.inference_mode()      
+def get_distributed_keys(tensor):
+      # Create a new tensor of the same shape and data type as the input tensor but with all elements initialized to 1
+      tensor_init_one = [torch.ones_like(tensor)]
 
-      all_tensors = [tensor_init_one for _ in range(torch.distributed.get_world_size())]
-
+      # Create a list with a length determined by the number of processes in the distributed environment
+      tensors = []
       for _ in range(torch.distributed.get_world_size()):
-            torch.ones_like(tensor)
+            tensors.append(tensor_init_one)
 
-      torch.distributed.all_gather(all_tensors, tensor, async_op=False)
+      # Stores the tensors that are gathered from all processes
+      torch.distributed.all_gather(tensors, tensor, async_op=False)
 
-      return torch.cat(all_tensors, dim=0)
+      # Concatenated tensors to a single tensor
+      return torch.cat(tensors, dim=0)
