@@ -1,7 +1,7 @@
 import torch
 from torch import device, nn
 from tqdm.auto import tqdm
-from model.utilis import accuracy_fn, accuracy_top_k
+from model.utilis import accuracy_fn
 
 def train_step(model: torch.nn.Module, 
                data_loader: torch.utils.data.DataLoader, 
@@ -18,8 +18,8 @@ def train_step(model: torch.nn.Module,
    for batch, (X, _) in enumerate(data_loader):
       # put data on target device       
       X = X.to(device)
-
       # 1. Forward pass
+      print(X[0].shape, X[1].shape)
       output, target = model(query_batch_images=X[0],key_batch_images=X[1])
 
       # 2. Calculate loss (per batch)

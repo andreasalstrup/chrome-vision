@@ -114,8 +114,10 @@ class ChromeCut(nn.Module):
             self.softmax_temp = softmax_temp
 
             # Create query and key encoder
-            self.encoder_query = base_encoder(num_classes=feature_dim)
-            self.encoder_key = base_encoder(num_classes=feature_dim)
+            self.encoder_query = base_encoder(in_features=784, num_classes=feature_dim)
+            print(self.encoder_query)
+            self.encoder_key = base_encoder(in_features=784, num_classes=feature_dim)
+            print(self.encoder_key)
 
             # Adding MLP Projection Head for representation
             if mlp:
@@ -155,10 +157,10 @@ class ChromeCut(nn.Module):
             # Initialize with random numbers
             self.register_buffer("queue", torch.randn(feature_dim, queue_size))
             # Normalize all tensors in the queue
-            self.queue = nn.functional.normalize(input=feature_dim, feature_dim=0)
+            self.queue = nn.functional.normalize(input=self.queue, dim=0)
 
             # Create queue pointer
-            self.register_buffer("queue_ptr", torch.zeros(size=1, dtype=torch.long))
+            self.register_buffer("queue_ptr", torch.zeros(1))
       
       # Take gradients from encoder_query and update parameters in the encoder_key
       # Make the key encoder processively evolving
