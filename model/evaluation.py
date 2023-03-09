@@ -1,7 +1,7 @@
 import torch
 from torch import device, nn
 from tqdm.auto import tqdm
-from model.utilis import accuracy_fn, accuracy_top_k
+from model.utilis import accuracy_fn
 
 def train_step(model: torch.nn.Module, 
                data_loader: torch.utils.data.DataLoader, 
