@@ -27,13 +27,13 @@ conda activate cv
 #### 4.1 If using CPU
 
 ```bash
-conda install pytorch torchvision torchaudio cpuonly -c pytorch
+conda install cpuonly -c pytorch
 ```
 
 #### 4.2 If using GPU with CUDA support
 
 ```bash
-conda install pytorch torchvision torchaudio pytorch-cuda=11.6 -c pytorch -c nvidia
+conda install pytorch-cuda=11.6 -c pytorch -c nvidia
 ```
 
 ### 5. Run
