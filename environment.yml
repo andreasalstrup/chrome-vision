@@ -1,14 +1,15 @@
 name: cv
 channels:
-  - conda-forge
-  - pytorch
+  - defaults
 dependencies:
+  - pytorch::torchvision
+  - pytorch::torchaudio
+  - conda-forge::cudnn=8.1
   - python=3.10.*
   - jupyter
   - numpy=1.23.*
   - pandas=1.5.*
   - opencv
-  - cudnn=8.1
   - matplotlib
   - seaborn
   - IPython
@@ -18,3 +19,5 @@ dependencies:
   - libpng
   - jpeg
   - pip
+  - pip:
+    - torch
