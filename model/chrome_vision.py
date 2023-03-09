@@ -114,8 +114,8 @@ class ChromeCut(nn.Module):
             self.softmax_temp = softmax_temp
 
             # Create query and key encoder
-            self.encoder_query = base_encoder(num_classes=feature_dim)
-            self.encoder_key = base_encoder(num_classes=feature_dim)
+            self.encoder_query = base_encoder
+            self.encoder_key = base_encoder
 
             # Adding MLP Projection Head for representation
             if mlp:
@@ -155,17 +155,17 @@ class ChromeCut(nn.Module):
             # Initialize with random numbers
             self.register_buffer("queue", torch.randn(feature_dim, queue_size))
             # Normalize all tensors in the queue
-            self.queue = nn.functional.normalize(input=feature_dim, feature_dim=0)
+            self.queue = nn.functional.normalize(input=self.queue, dim=0)
 
             # Create queue pointer
-            self.register_buffer("queue_ptr", torch.zeros(size=1, dtype=torch.long))
+            self.register_buffer("queue_ptr", torch.zeros(1, dtype=torch.long))
       
       # Take gradients from encoder_query and update parameters in the encoder_key
       # Make the key encoder processively evolving
       # Makes momentum contrast (MoCo) more memory efficient
       def momentum_update(self):
             # Sequence query encoder and key encoder as tuples
-            for param_query, param_key in zip(self.encoder_query, self.encoder_key):
+            for param_query, param_key in zip(self.encoder_query.parameters(), self.encoder_key.parameters()):
                   # Apply momentum update for all tuples
                   param_key.data = self.momentum * param_key.data + (1 - self.momentum) * param_query.data
 
@@ -193,6 +193,8 @@ class ChromeCut(nn.Module):
 
 
       def forward(self, query_batch_images, key_batch_images):
+            print(f"query_batch_images: {query_batch_images.shape}\n")
+            print(f"key_batch_images: {key_batch_images.shape}\n")
 
             query = self.encoder_query(query_batch_images)
             query = nn.functional.normalize(query, dim=1)
@@ -221,9 +223,11 @@ class ChromeCut(nn.Module):
             #
             # Output dimension: Nx1
             positive_logits = torch.einsum("nc,nc->n", [query, keys])
+            print(f"positive_logits: {positive_logits.shape}\n")
 
             # Add a new dimentions at then end of the tensor and make it a 2D tensor
             positive_logits = positive_logits.unsqueeze(dim=-1)
+            print(f"positive_logits unsqueeze: {positive_logits.shape}\n")
 
             # Create a clone of the query thereby not affecting the original tensor or its gradients
             query_clone = self.queue.clone().detach()
@@ -255,7 +259,11 @@ class ChromeCut(nn.Module):
             logits /= self.softmax_temp
 
             # Instantiate a tensor of zeros of the size logits.shape[0] (rows in logits = number of examples in batch)
-            labels = torch.zeros(logits.shape[0], dtype=torch.long).cuda()
+            
+            if torch.cuda.is_available():
+                  labels = torch.zeros(logits.shape[0], dtype=torch.long).cuda()
+            else:
+                  labels = torch.zeros(logits.shape[0], dtype=torch.long)
 
             self.enqueue_dequeue(keys)
 

@@ -15,12 +15,17 @@ def train_step(model: torch.nn.Module,
    model.train()
 
    # X: image (features)
-   for batch, (X, _) in enumerate(data_loader):
+   for batch, (X) in enumerate(data_loader):
       # put data on target device       
       X = X.to(device)
 
       # 1. Forward pass
-      output, target = model(query_batch_images=X[0],key_batch_images=X[1])
+      print(f"X.shape: {X.shape}\n")
+      print(f"X[0] shape: {X[0].shape}\n")
+      print(f"X[1] shape: {X[1].shape}\n")
+      output, target = model(query_batch_images=X[0].unsqueeze(0),key_batch_images=X[1].unsqueeze(0))
+      print(f"X[0].unsqueeze(0) shape: {X[0].unsqueeze(0).shape}\n")
+      print(f"X[1].unsqueeze(0) shape: {X[1].unsqueeze(0).shape}\n")
 
       # 2. Calculate loss (per batch)
       loss = nn.CrossEntropyLoss(output, target)
