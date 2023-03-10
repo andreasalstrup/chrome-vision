@@ -1,13 +1,13 @@
 import torch
 from torch import device, nn
 from tqdm.auto import tqdm
-from model.utilis import accuracy_fn
+
 
 def train_step(model: torch.nn.Module, 
                data_loader: torch.utils.data.DataLoader, 
                loss_fn: torch.nn.Module,
                optimizer: torch.optim.Optimizer, 
-               accuracy_fn=accuracy_fn,
+               accuracy_fn,
                device: torch.device = device):
    
    train_loss, train_acc = 0, 0
@@ -15,21 +15,21 @@ def train_step(model: torch.nn.Module,
    model.train()
 
    # X: image (features)
-   for batch, (X) in enumerate(data_loader):
+   for batch, (images, _) in enumerate(tqdm(data_loader)):
       # put data on target device       
-      X = X.to(device)
+      images = images.to(device)
 
       # 1. Forward pass
-      print(f"X.shape: {X.shape}\n")
-      print(f"X[0] shape: {X[0].shape}\n")
-      print(f"X[1] shape: {X[1].shape}\n")
-      output, target = model(query_batch_images=X[0].unsqueeze(0),key_batch_images=X[1].unsqueeze(0))
-      print(f"X[0].unsqueeze(0) shape: {X[0].unsqueeze(0).shape}\n")
-      print(f"X[1].unsqueeze(0) shape: {X[1].unsqueeze(0).shape}\n")
+      output, target = model(query_batch_images=images[0],key_batch_images=images[1])
+      output.requires_grad = True
 
       # 2. Calculate loss (per batch)
-      loss = nn.CrossEntropyLoss(output, target)
-      #acc1, acc5 = accuracy_top_k(output, target, topk=(1, 5))
+      loss = loss_fn(output, target)
+      train_loss += loss
+
+      acc1, acc5 = accuracy_fn(output, target, topk=(1, 5))
+      train_acc += acc1[0]
+      train_acc += acc5[0]
       
       # 3. Optimizer zero grad
       optimizer.zero_grad()
@@ -39,20 +39,56 @@ def train_step(model: torch.nn.Module,
 
       # 5. Optimizer step
       optimizer.step()
-
+      
    # Divide total train loss by length of train dataloader (average loss per batch per epoch)
    train_loss /= len(data_loader)
    train_acc /= len(data_loader)
 
-   if batch % 10 == 0:
-      print(f'Train loss: {train_loss:.5f} | Train acc: {train_acc:.2f}%')
+   print(f'Train loss: {train_loss:.5f} | Train acc: {train_acc:.2f}%')
+
+
+def test_step(model: torch.nn.Module, 
+               data_loader: torch.utils.data.DataLoader, 
+               loss_fn: torch.nn.Module, 
+               accuracy_fn,
+               device: torch.device = device):
+   
+   loss, acc = 0, 0
+   
+   model.eval()
+
+   with torch.inference_mode():
+      for batch, (images, _) in enumerate(tqdm(data_loader)):
+         # put data on target device       
+         images = images.to(device)
+
+         # Make predictions
+         output, target = model(query_batch_images=images[0],key_batch_images=images[1])
+
+         # Calculate loss 
+         loss += loss_fn(output, target)
+
+         # Calculate accuracy
+         acc1, acc5 = accuracy_fn(output, target, topk=(1, 5))
+         acc += acc1[0]
+         acc += acc5[0]
+
+      # Divide total train loss by length of train dataloader (average loss per batch per epoch)
+      loss /= len(data_loader)
+      acc /= len(data_loader)
+      
+      print(f"Test loss: {loss:.5f} | Test acc: {acc:.2f}%")
+
+   return {"model_name": model.__class__.__name__, 
+           "model_loss": loss.item(),
+           "model_acc": acc}
 
 
 def train_step_label(model: torch.nn.Module, 
                data_loader: torch.utils.data.DataLoader, 
                loss_fn: torch.nn.Module,
                optimizer: torch.optim.Optimizer, 
-               accuracy_fn=accuracy_fn,
+               accuracy_fn,
                device: torch.device = device):
    
    train_loss, train_acc = 0, 0
@@ -88,7 +124,7 @@ def train_step_label(model: torch.nn.Module,
 
    print(f'Train loss: {train_loss:.5f} | Train acc: {train_acc:.2f}%')
 
-def test_step(model: torch.nn.Module, 
+def test_step_label(model: torch.nn.Module, 
                data_loader: torch.utils.data.DataLoader, 
                loss_fn: torch.nn.Module, 
                accuracy_fn,

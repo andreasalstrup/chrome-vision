@@ -1,5 +1,7 @@
 import torch
+import numpy as np
 from torch import nn
+from sklearn.metrics import accuracy_score
 from pathlib import Path
 
 def saveModel(path, name, model: nn.Module):
@@ -37,3 +39,25 @@ def accuracy_fn(y_true, y_pred):
     correct = torch.eq(y_true, y_pred).sum().item()
     acc = (correct / len(y_pred)) * 100
     return acc
+
+# def accuracy_top_k(y_true, y_pred, k=1):
+#     with torch.inference_mode():
+#         top_k_preds = [np.argpartition(pred, max(-k, 1))[-k:] for pred in y_pred.cpu()]
+#         y_pred_top_k = [pred in top_k for pred, top_k in zip(y_pred.cpu(), top_k_preds)]
+#         return accuracy_score(y_true, y_pred_top_k)
+    
+def accuracy_top_k(output, target, topk=(1,)):
+    """Computes the accuracy over the k top predictions for the specified values of k"""
+    with torch.no_grad():
+        maxk = max(topk)
+        batch_size = target.size(0)
+
+        _, pred = output.topk(maxk, 1, True, True)
+        pred = pred.t()
+        correct = pred.eq(target.view(1, -1).expand_as(pred))
+
+        res = []
+        for k in topk:
+            correct_k = correct[:k].view(-1).float().sum(0, keepdim=True)
+            res.append(correct_k.mul_(100.0 / batch_size))
+        return res

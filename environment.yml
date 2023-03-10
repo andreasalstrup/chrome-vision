@@ -5,6 +5,7 @@ dependencies:
   - pytorch::torchvision
   - pytorch::torchaudio
   - conda-forge::cudnn=8.1
+  - conda-forge::scikit-learn
   - python=3.10.*
   - jupyter
   - numpy=1.23.*
