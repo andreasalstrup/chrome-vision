@@ -173,7 +173,7 @@ class ChromeCut(nn.Module):
       # The current mini-batch is enqueued to the dictionary and the oldest mini-batch in the queue is removed
       def enqueue_dequeue(self, keys):
             # Get all keys in queue
-            #keys = get_distributed_keys(keys)
+            # keys = get_distributed_keys(keys)
 
             batch_size = keys.shape[0]
 
@@ -183,7 +183,7 @@ class ChromeCut(nn.Module):
             end_index = current_ptr + batch_size
             # Preform enqueue and dequeue
             # Set the new queue. Get all rows
-            self.queue[:, start_index : end_index] = keys.softmax_temp
+            self.queue[:, start_index : end_index] = keys.T
 
             # Move the pointer
             new_ptr = (current_ptr + batch_size) % self.queue_size
@@ -193,8 +193,6 @@ class ChromeCut(nn.Module):
 
 
       def forward(self, query_batch_images, key_batch_images):
-            print(f"query_batch_images: {query_batch_images.shape}\n")
-            print(f"key_batch_images: {key_batch_images.shape}\n")
 
             query = self.encoder_query(query_batch_images)
             query = nn.functional.normalize(query, dim=1)
@@ -223,11 +221,9 @@ class ChromeCut(nn.Module):
             #
             # Output dimension: Nx1
             positive_logits = torch.einsum("nc,nc->n", [query, keys])
-            print(f"positive_logits: {positive_logits.shape}\n")
 
             # Add a new dimentions at then end of the tensor and make it a 2D tensor
             positive_logits = positive_logits.unsqueeze(dim=-1)
-            print(f"positive_logits unsqueeze: {positive_logits.shape}\n")
 
             # Create a clone of the query thereby not affecting the original tensor or its gradients
             query_clone = self.queue.clone().detach()
@@ -249,17 +245,12 @@ class ChromeCut(nn.Module):
             # Concatenate positive_logits and negative_logits along the secound dimension (columns)
             # Output dimension: Nx(1+K), (rows)x(columns)
             logits = torch.cat([positive_logits, negative_logits], dim=1)
-
-            print(f'positive_logits shape: {positive_logits.shape}\n')
-            print(f'negative_logits shape: {negative_logits.shape}\n')
-            print(f'Logits shape: {logits.shape}\n')
             
             # Apply softmax temperature scaling
             # Deviding softmax_temp with each value in tensor  
             logits /= self.softmax_temp
 
             # Instantiate a tensor of zeros of the size logits.shape[0] (rows in logits = number of examples in batch)
-            
             if torch.cuda.is_available():
                   labels = torch.zeros(logits.shape[0], dtype=torch.long).cuda()
             else:
