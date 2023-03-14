@@ -25,11 +25,11 @@ def train_step(model: torch.nn.Module,
 
       # 2. Calculate loss (per batch)
       loss = loss_fn(output, target)
-      train_loss += loss
+      train_loss += loss.item()
 
-      acc1, acc5 = accuracy_fn(output, target, topk=(1, 5))
-      train_acc += acc1[0]
-      train_acc += acc5[0]
+      acc1, acc5 = accuracy_fn(output, target, topk=(1, 5))      
+      train_acc += acc1.item()
+      train_acc += acc5.item()
       
       # 3. Optimizer zero grad
       optimizer.zero_grad()
@@ -44,7 +44,7 @@ def train_step(model: torch.nn.Module,
    train_loss /= len(data_loader)
    train_acc /= len(data_loader)
 
-   print(f'Train loss: {train_loss:.5f} | Train acc: {train_acc:.2f}%')
+   print(f'Train loss: {train_loss:.5f} | Train acc: {train_acc:.5f}%')
 
 
 def test_step(model: torch.nn.Module, 
