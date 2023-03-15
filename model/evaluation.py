@@ -15,12 +15,16 @@ def train_step(model: torch.nn.Module,
    model.train()
 
    # X: image (features)
-   for batch, (images, _) in enumerate(tqdm(data_loader)):
-      # put data on target device       
-      images = images.to(device)
+   for batch, (images) in enumerate(tqdm(data_loader)):
+
+      # Add an extra dimension to all images (tensor) in batch.
+      # 3rd to 4th dimension
+      # (1, C, H, W)  
+      query_image = images[0].unsqueeze(0).to(device)
+      key_image = images[1].unsqueeze(0).to(device)
 
       # 1. Forward pass
-      output, target = model(query_batch_images=images[0],key_batch_images=images[1])
+      output, target = model(query_batch_images=query_image,key_batch_images=key_image)
       output.requires_grad = True
 
       # 2. Calculate loss (per batch)
@@ -58,12 +62,16 @@ def test_step(model: torch.nn.Module,
    model.eval()
 
    with torch.inference_mode():
-      for batch, (images, _) in enumerate(tqdm(data_loader)):
-         # put data on target device       
-         images = images.to(device)
+      for batch, (images) in enumerate(tqdm(data_loader)):
+         
+         # Add an extra dimension to all images (tensor) in batch.
+         # 3rd to 4th dimension
+         # (1, C, H, W)  
+         query_image = images[0].unsqueeze(0).to(device)
+         key_image = images[1].unsqueeze(0).to(device)
 
          # Make predictions
-         output, target = model(query_batch_images=images[0],key_batch_images=images[1])
+         output, target = model(query_batch_images=query_image,key_batch_images=key_image)
 
          # Calculate loss 
          loss += loss_fn(output, target)
