@@ -1,11 +1,12 @@
 name: cv
 channels:
-  - defaults
+  - conda-forge
+  - pytorch
 dependencies:
-  - pytorch::torchvision
-  - pytorch::torchaudio
-  - conda-forge::cudnn=8.1
-  - conda-forge::scikit-learn
+  - pytorch
+  - torchvision
+  - torchaudio
+  - scikit-learn
   - python=3.10.*
   - jupyter
   - numpy=1.23.*
@@ -20,5 +21,3 @@ dependencies:
   - libpng
   - jpeg
   - pip
-  - pip:
-    - torch
