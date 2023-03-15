@@ -17,7 +17,7 @@ def train_step(model: torch.nn.Module,
    # X: image (features)
    for batch, (images) in enumerate(tqdm(data_loader)):
 
-      # Add an extra dimension to all images (tensor) in batch.
+      # Add an extra dimension to image (tensor) in batch.
       # 3rd to 4th dimension
       # (1, C, H, W)  
       query_image = images[0].unsqueeze(0).to(device)
@@ -63,8 +63,8 @@ def test_step(model: torch.nn.Module,
 
    with torch.inference_mode():
       for batch, (images) in enumerate(tqdm(data_loader)):
-         
-         # Add an extra dimension to all images (tensor) in batch.
+
+         # Add an extra dimension to image (tensor) in batch.
          # 3rd to 4th dimension
          # (1, C, H, W)  
          query_image = images[0].unsqueeze(0).to(device)
