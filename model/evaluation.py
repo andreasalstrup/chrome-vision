@@ -10,7 +10,7 @@ def train_step(model: torch.nn.Module,
                accuracy_fn,
                device: torch.device = device):
    
-   train_loss, train_acc = 0, 0
+   train_loss, train_acc1, train_acc5 = 0, 0, 0
     
    model.train()
 
@@ -32,8 +32,8 @@ def train_step(model: torch.nn.Module,
       train_loss += loss.item()
 
       acc1, acc5 = accuracy_fn(output, target, topk=(1, 5))      
-      train_acc += acc1.item()
-      train_acc += acc5.item()
+      train_acc1 += acc1.item()
+      train_acc5 += acc5.item()
       
       # 3. Optimizer zero grad
       optimizer.zero_grad()
@@ -46,9 +46,10 @@ def train_step(model: torch.nn.Module,
       
    # Divide total train loss by length of train dataloader (average loss per batch per epoch)
    train_loss /= len(data_loader)
-   train_acc /= len(data_loader)
+   train_acc1 /= len(data_loader)
+   train_acc5 /= len(data_loader)
 
-   print(f'Train loss: {train_loss:.5f} | Train acc: {train_acc:.5f}%')
+   print(f'Train loss: {train_loss:.5f} | Train acc1: {train_acc1:.2f}% | Train acc5: {train_acc5:.2f}%')
 
 
 def test_step(model: torch.nn.Module, 
@@ -57,7 +58,7 @@ def test_step(model: torch.nn.Module,
                accuracy_fn,
                device: torch.device = device):
    
-   loss, acc = 0, 0
+   test_loss, test_acc1, test_acc5 = 0, 0, 0
    
    model.eval()
 
@@ -74,22 +75,24 @@ def test_step(model: torch.nn.Module,
          output, target = model(query_batch_images=query_image,key_batch_images=key_image)
 
          # Calculate loss 
-         loss += loss_fn(output, target)
+         test_loss += loss_fn(output, target)
 
          # Calculate accuracy
          acc1, acc5 = accuracy_fn(output, target, topk=(1, 5))
-         acc += acc1[0]
-         acc += acc5[0]
+         test_acc1 += acc1.item()
+         test_acc5 += acc5.item()
 
       # Divide total train loss by length of train dataloader (average loss per batch per epoch)
-      loss /= len(data_loader)
-      acc /= len(data_loader)
+      test_loss /= len(data_loader)
+      test_acc1 /= len(data_loader)
+      test_acc5 /= len(data_loader)
       
-      print(f"Test loss: {loss:.5f} | Test acc: {acc:.2f}%")
+      print(f'Test loss: {test_loss:.5f} | Test acc1: {test_acc1:.2f}% | Test acc5: {test_acc5:.2f}%')
 
    return {"model_name": model.__class__.__name__, 
-           "model_loss": loss.item(),
-           "model_acc": acc}
+           "model_loss": test_loss.item(),
+           "model_acc1": test_acc1,
+           "model_acc5": test_acc5}
 
 
 def train_step_label(model: torch.nn.Module, 
