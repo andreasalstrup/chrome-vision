@@ -21,28 +21,37 @@ def train_step(model: torch.nn.Module,
       # 3rd to 4th dimension
       # (1, C, H, W)  
       query_image = images[0].unsqueeze(0).to(device)
-      key_image = images[1].unsqueeze(0).to(device)
-
-      # 1. Forward pass
-      output, target = model(query_batch_images=query_image,key_batch_images=key_image)
-      output.requires_grad = True
-
-      # 2. Calculate loss (per batch)
-      loss = loss_fn(output, target)
-      train_loss += loss.item()
-
-      acc1, acc5 = accuracy_fn(output, target, topk=(1, 5))      
-      train_acc1 += acc1.item()
-      train_acc5 += acc5.item()
       
-      # 3. Optimizer zero grad
-      optimizer.zero_grad()
+      # query_image = images.to(device)
+      # key_image = images.to(device)
+      
+      for image in images[1:]:
+         key_image = image.unsqueeze(0).to(device)
 
-      # 4. Loss backward
-      loss.backward()
+         # 1. Forward pass
+         output, target = model(query_batch_images=query_image,key_batch_images=key_image)
+         output.requires_grad = True
 
-      # 5. Optimizer step
-      optimizer.step()
+         # 2. Calculate loss (per batch)
+         loss = loss_fn(output, target)
+         train_loss += loss.item()
+
+         acc1, acc5 = accuracy_fn(output, target, topk=(1, 5))      
+         train_acc1 += acc1.item()
+         train_acc5 += acc5.item()
+         
+         # 3. Optimizer zero grad
+         optimizer.zero_grad()
+
+         # 4. Loss backward
+         loss.backward()
+
+         # 5. Optimizer step
+         optimizer.step()
+
+      train_loss /= len(images)
+      train_acc1 /= len(images)
+      train_acc5 /= len(images)
       
    # Divide total train loss by length of train dataloader (average loss per batch per epoch)
    train_loss /= len(data_loader)
