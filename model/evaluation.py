@@ -59,6 +59,7 @@ def train_step(model: torch.nn.Module,
    train_acc5 /= len(data_loader)
 
    print(f'Train loss: {train_loss:.5f} | Train acc1: {train_acc1:.2f}% | Train acc5: {train_acc5:.2f}%')
+   return train_loss, train_acc5
 
 
 def test_step(model: torch.nn.Module, 
