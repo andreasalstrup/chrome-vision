@@ -14,6 +14,7 @@ count = 0
 print("\ntensor([x1, y1, x2, y2, score, class_id])\n")
 boxes = list()
 for result in results.xyxy[0]:
+    print(len(results.xyxy[0]))
     x1, y1, x2, y2, score, class_id = result    
 
     ####### Adding the crop to the boxes list
