@@ -3,3 +3,5 @@
 data/FashionMNIST
 __pycache__
 .ipynb_checkpoints
+runs/*
+data/cifar-10/*
