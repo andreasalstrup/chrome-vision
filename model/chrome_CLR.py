@@ -7,7 +7,7 @@ class ChromeCLR(nn.Module):
         super(ChromeCLR, self).__init__()
         
 
-        self.backbone = models.resnet18(pretrained=False, num_classes=out_dim)
+        self.backbone = models.resnet18(weights=None, num_classes=out_dim)
         dim_mlp = self.backbone.fc.in_features
 
         # add mlp projection head
