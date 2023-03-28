@@ -1,7 +1,8 @@
 *.pt
 *.pyc
 data/FashionMNIST
-__pycache__
+**/__pycache__
 .ipynb_checkpoints
-runs/*
-data/cifar-10/*
+runs/
+data/
+!data/leftImg8bit/indices
