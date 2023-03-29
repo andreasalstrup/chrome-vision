@@ -45,4 +45,4 @@ class CustomImageDataset(Dataset):
         image = read_image(img_path)        
         if self.transform:
             image = self.transform(image)
-        return image.float()
+        return image

@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+import torchvision.models as models
 
 ### Material
 # https://www.learnpytorch.io/01_pytorch_workflow/#2-build-model
@@ -98,7 +99,7 @@ class ChromeVisionModelV2(nn.Module):
             return x
       
 class ChromeCut(nn.Module):
-      def __init__(self, base_encoder, feature_dim=128, queue_size=65536, momentum=0.999, softmax_temp=0.07, mlp=False):
+      def __init__(self, feature_dim=128, queue_size=65536, momentum=0.999, softmax_temp=0.07, mlp=False):
             """
             # feature_dim: uique classes in the target dataset
             # queue_size: number of keys in queue
@@ -114,8 +115,8 @@ class ChromeCut(nn.Module):
             self.softmax_temp = softmax_temp
 
             # Create query and key encoder
-            self.encoder_query = base_encoder
-            self.encoder_key = base_encoder
+            self.encoder_query = models.resnet50(weights=None, num_classes=feature_dim)
+            self.encoder_key = models.resnet50(weights=None, num_classes=feature_dim)
 
             # Adding MLP Projection Head for representation
             if mlp:
@@ -163,6 +164,7 @@ class ChromeCut(nn.Module):
       # Take gradients from encoder_query and update parameters in the encoder_key
       # Make the key encoder processively evolving
       # Makes momentum contrast (MoCo) more memory efficient
+      @torch.no_grad()
       def momentum_update(self):
             # Sequence query encoder and key encoder as tuples
             for param_query, param_key in zip(self.encoder_query.parameters(), self.encoder_key.parameters()):
@@ -171,6 +173,7 @@ class ChromeCut(nn.Module):
 
       # Maintain the dictionary as a queue of data samples
       # The current mini-batch is enqueued to the dictionary and the oldest mini-batch in the queue is removed
+      @torch.no_grad()
       def enqueue_dequeue(self, keys):
             # Get all keys in queue
             # keys = get_distributed_keys(keys)
@@ -178,12 +181,14 @@ class ChromeCut(nn.Module):
             batch_size = keys.shape[0]
 
             current_ptr = int(self.queue_ptr)
+            #assert self.queue_size % batch_size == 0  # for simplicity
 
-            start_index = current_ptr
-            end_index = current_ptr + batch_size
+            #start_index = current_ptr
+            #end_index = current_ptr + batch_size
             # Preform enqueue and dequeue
             # Set the new queue. Get all rows
-            self.queue[:, start_index : end_index] = keys.T
+            #self.queue[:, start_index : end_index] = keys.T
+            self.queue[:, current_ptr : current_ptr + batch_size] = keys.T.view(1, -1)
 
             # Move the pointer
             new_ptr = (current_ptr + batch_size) % self.queue_size
@@ -191,13 +196,30 @@ class ChromeCut(nn.Module):
             # Set the new pointer
             self.queue_ptr[0] = new_ptr
 
+            # batch_size, key_size = keys.shape
+
+            # current_ptr = int(self.queue_ptr)
+
+            # # Resize the queue tensor to match the size of the keys tensor
+            # if self.queue.shape[1] != key_size:
+            #       self.queue = torch.zeros((self.queue_size, key_size), device=keys.device)
+
+            # # Preform enqueue and dequeue
+            # self.queue[:, current_ptr:current_ptr+batch_size] = keys.T
+
+            # # Move the pointer
+            # new_ptr = (current_ptr + batch_size) % self.queue_size
+
+            # # Set the new pointer
+            # self.queue_ptr[0] = new_ptr
+
 
       def forward(self, query_batch_images, key_batch_images):
 
             query = self.encoder_query(query_batch_images)
             query = nn.functional.normalize(query, dim=1)
 
-            with torch.inference_mode():
+            with torch.no_grad():
                   self.momentum_update()
 
                   keys = self.encoder_key(key_batch_images)
