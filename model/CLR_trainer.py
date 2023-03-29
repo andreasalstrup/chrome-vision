@@ -66,13 +66,15 @@ class CLRTrainer(object):
         logging.info(f"Training with CPU.")
 
         for epoch_counter in range(self.epochs):
-            for images, _ in tqdm(train_loader):
+            for images in tqdm(train_loader):
                 images = torch.cat(images, dim=0)
 
                 images = images.to(self.device)
 
                 features = self.model(images)
                 logits, labels = self.info_nce_loss(features)
+
+                logits, labels = logits.to(self.device), labels.to(self.device)
                 loss = self.criterion(logits, labels)
 
                 self.optimizer.zero_grad()
@@ -82,7 +84,7 @@ class CLRTrainer(object):
                 scaler.step(self.optimizer)
                 scaler.update()
 
-                if n_iter % 0.07 == 0:
+                if n_iter % 5 == 0:
                     top1, top5 = self.accuracy(logits, labels, (1, 5))
                     self.writer.add_scalar('loss', loss, global_step=n_iter)
                     self.writer.add_scalar('acc/top1', top1[0], global_step=n_iter)

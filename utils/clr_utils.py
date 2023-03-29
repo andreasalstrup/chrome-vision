@@ -3,12 +3,16 @@ import torch
 from torch import nn
 from torchvision import transforms, datasets
 from torchvision.transforms import transforms
-
+import dataset
 np.random.seed(0)
 
-class ContrastiveLearningDataset:
-    def __init__(self, root_folder):
-        self.root_folder = root_folder
+class ContrastiveLearningTransforms:
+    def __init__(self, n_views, img_dir, annotation_file):
+        return dataset.ChromeData(img_dir = img_dir, 
+                            annotations_file = annotation_file,
+                            transform=ContrastiveLearningViewGenerator(
+                            self.get_simclr_pipeline_transform(32),
+                            n_views))
 
     @staticmethod
     def get_simclr_pipeline_transform(size, s=1):
@@ -20,23 +24,7 @@ class ContrastiveLearningDataset:
                                               transforms.RandomGrayscale(p=0.2),
                                               GaussianBlur(kernel_size=int(0.1 * size)),
                                               transforms.ToTensor()])
-        return data_transforms
-
-    def get_dataset(self, name, n_views):
-        valid_datasets = {'cifar10': lambda: datasets.CIFAR10(self.root_folder, train=True,
-                                                              transform=ContrastiveLearningViewGenerator(
-                                                                  self.get_simclr_pipeline_transform(32),
-                                                                  n_views),
-                                                              download=True),
-
-                          'stl10': lambda: datasets.STL10(self.root_folder, split='unlabeled',
-                                                          transform=ContrastiveLearningViewGenerator(
-                                                              self.get_simclr_pipeline_transform(96),
-                                                              n_views),
-                                                          download=True)}
-
-        dataset_fn = valid_datasets[name]
-        return dataset_fn()
+        return data_transforms   
 
 
 class GaussianBlur(object):
