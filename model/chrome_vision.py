@@ -181,14 +181,14 @@ class ChromeCut(nn.Module):
             batch_size = keys.shape[0]
 
             current_ptr = int(self.queue_ptr)
-            #assert self.queue_size % batch_size == 0  # for simplicity
+            assert self.queue_size % batch_size == 0  # for simplicity
 
             #start_index = current_ptr
             #end_index = current_ptr + batch_size
             # Preform enqueue and dequeue
             # Set the new queue. Get all rows
             #self.queue[:, start_index : end_index] = keys.T
-            self.queue[:, current_ptr : current_ptr + batch_size] = keys.T.view(1, -1)
+            self.queue[:, current_ptr : current_ptr + batch_size] = keys.T
 
             # Move the pointer
             new_ptr = (current_ptr + batch_size) % self.queue_size
