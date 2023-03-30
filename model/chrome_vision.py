@@ -1,6 +1,5 @@
 import torch
 from torch import nn
-import torchvision.models as models
 
 ### Material
 # https://www.learnpytorch.io/01_pytorch_workflow/#2-build-model
@@ -10,96 +9,8 @@ import torchvision.models as models
 # Momentum update
 
 # Create a neural network module subclass
-class ChromeVisionModel(nn.Module):
-        
-        # Initialize model parameters
-        def __init__(self,
-                     input_shape: int,
-                     hidden_units: int,
-                     output_shape: int):
-
-            super().__init__()
-
-            self.layer_stack = nn.Sequential(
-                # 1. Pass sample through the flatten layer
-                nn.Flatten(),
-                # 2. Pass output of flatten layer to a linear layer
-                nn.Linear(in_features=input_shape,
-                          out_features=hidden_units),
-                # 3. Wont change shape of data
-                nn.ReLU(),
-                # 4. Pass output of ReLU layer to a linear layer 
-                nn.Linear(in_features=hidden_units,
-                          out_features=output_shape),
-                # 5.
-                nn.ReLU()
-            )
-        
-        # Forwad propagation
-        # Executed at every call
-        # First call is the model call -> model(input)
-        # Models take input x (one batch at a time)
-        def forward(self, x: torch.Tensor): 
-              return self.layer_stack(x)
-        
-# A Convolutional Neural network
-# https://poloclub.github.io/cnn-explainer/
-class ChromeVisionModelV2(nn.Module):
-      def __init__(self, input_shape: int, hidden_units: int, output_shape: int):
-            
-            super().__init__()
-
-            # Feature extractor layers
-            self.conv_block_1 = nn.Sequential(
-                  nn.Conv2d(in_channels=input_shape,
-                            out_channels=hidden_units,
-                            kernel_size=3,
-                            stride=1,
-                            padding=1),
-                   nn.ReLU(),
-                   nn.Conv2d(in_channels=hidden_units,
-                             out_channels=hidden_units,
-                             kernel_size=3,
-                             stride=1,
-                             padding=1),
-                    nn.ReLU(),
-                    nn.MaxPool2d(kernel_size=2) # Take max value in window
-            )
-
-            # Feature extractor layers
-            self.conv_block_2 = nn.Sequential(
-                  nn.Conv2d(in_channels=hidden_units,
-                            out_channels=hidden_units,
-                            kernel_size=3,
-                            stride=1,
-                            padding=1),
-                   nn.ReLU(),
-                   nn.Conv2d(in_channels=hidden_units,
-                             out_channels=hidden_units,
-                             kernel_size=3,
-                             stride=1,
-                             padding=1),
-                    nn.ReLU(),
-                    nn.MaxPool2d(kernel_size=2)
-            )
-
-            # Classifier layers
-            self.classifier = nn.Sequential(
-                  nn.Flatten(),
-                  nn.Linear(in_features=hidden_units*7*7, # Output shape of conv_block_2
-                            out_features=output_shape)  # outpu_chape: each class
-            )
-
-      def forward(self, x):
-            x = self.conv_block_1(x)
-            #print(x.shape)
-            x = self.conv_block_2(x)
-            #print(x.shape)
-            x = self.classifier(x)
-            return x
-      
-class ChromeCut(nn.Module):
-      def __init__(self, feature_dim=128, queue_size=65536, momentum=0.999, softmax_temp=0.07, mlp=False):
+class ChromeMoCo(nn.Module):
+      def __init__(self, base_encoder, feature_dim=128, queue_size=65536, momentum=0.999, softmax_temp=0.07):
             """
             # feature_dim: uique classes in the target dataset
             # queue_size: number of keys in queue
@@ -108,42 +19,41 @@ class ChromeCut(nn.Module):
             # mlp: multilayer perceptron
             """
 
-            super(ChromeCut, self).__init__()
+            super(ChromeMoCo, self).__init__()
 
             self.queue_size = queue_size
             self.momentum = momentum
             self.softmax_temp = softmax_temp
 
             # Create query and key encoder
-            self.encoder_query = models.resnet50(weights=None, num_classes=feature_dim)
-            self.encoder_key = models.resnet50(weights=None, num_classes=feature_dim)
+            self.encoder_query = base_encoder(weights=None, num_classes=feature_dim)
+            self.encoder_key = base_encoder(weights=None, num_classes=feature_dim)
 
             # Adding MLP Projection Head for representation
-            if mlp:
-                  # Get the dimension of the first fully connected layer 
-                  dim_mlp = self.encoder_query.fc.weight.shape[1]
+            # Get the dimension of the first fully connected layer 
+            dim_mlp = self.encoder_query.fc.weight.shape[1]
 
-                  # Setup layers in the query encoder
-                  self.encoder_query.fc = nn.Sequential(
-                        # Create a linear layer
-                        nn.Linear(in_features=dim_mlp, 
-                                  out_features=dim_mlp),
-                        # max(0, out_features)
-                        nn.ReLU(),
-                        # A stack of fully connected layers
-                        self.encoder_query.fc
-                  )
+            # Setup layers in the query encoder
+            self.encoder_query.fc = nn.Sequential(
+                  # Create a linear layer
+                  nn.Linear(in_features=dim_mlp, 
+                              out_features=dim_mlp),
+                  # max(0, out_features)
+                  nn.ReLU(),
+                  # A stack of fully connected layers
+                  self.encoder_query.fc
+            )
 
-                  # Setup layers in the key encoder
-                  self.encoder_key.fc = nn.Sequential(
-                        # Create a linear layer
-                        nn.Linear(in_features=dim_mlp,
-                                  out_features=dim_mlp),
-                        # max(0, out_features)
-                        nn.ReLU(),
-                        # A stack of fully connected layers
-                        self.encoder_key.fc
-                  )
+            # Setup layers in the key encoder
+            self.encoder_key.fc = nn.Sequential(
+                  # Create a linear layer
+                  nn.Linear(in_features=dim_mlp,
+                              out_features=dim_mlp),
+                  # max(0, out_features)
+                  nn.ReLU(),
+                  # A stack of fully connected layers
+                  self.encoder_key.fc
+            )
             
             # Sequence query encoder and key encoder as tuples
             for param_query, param_key in zip(self.encoder_query.parameters(), self.encoder_key.parameters()):
@@ -175,44 +85,23 @@ class ChromeCut(nn.Module):
       # The current mini-batch is enqueued to the dictionary and the oldest mini-batch in the queue is removed
       @torch.no_grad()
       def enqueue_dequeue(self, keys):
-            # Get all keys in queue
-            # keys = get_distributed_keys(keys)
-
             batch_size = keys.shape[0]
 
             current_ptr = int(self.queue_ptr)
-            assert self.queue_size % batch_size == 0  # for simplicity
+            assert self.queue_size % batch_size == 0, f"Queue size ({self.queue_size}) is not a factor of Batch size ({batch_size})"
 
-            #start_index = current_ptr
-            #end_index = current_ptr + batch_size
+            start_index = current_ptr
+            end_index = current_ptr + batch_size
+
             # Preform enqueue and dequeue
             # Set the new queue. Get all rows
-            #self.queue[:, start_index : end_index] = keys.T
-            self.queue[:, current_ptr : current_ptr + batch_size] = keys.T
+            self.queue[:, start_index : end_index] = keys.T
 
             # Move the pointer
             new_ptr = (current_ptr + batch_size) % self.queue_size
             
             # Set the new pointer
             self.queue_ptr[0] = new_ptr
-
-            # batch_size, key_size = keys.shape
-
-            # current_ptr = int(self.queue_ptr)
-
-            # # Resize the queue tensor to match the size of the keys tensor
-            # if self.queue.shape[1] != key_size:
-            #       self.queue = torch.zeros((self.queue_size, key_size), device=keys.device)
-
-            # # Preform enqueue and dequeue
-            # self.queue[:, current_ptr:current_ptr+batch_size] = keys.T
-
-            # # Move the pointer
-            # new_ptr = (current_ptr + batch_size) % self.queue_size
-
-            # # Set the new pointer
-            # self.queue_ptr[0] = new_ptr
-
 
       def forward(self, query_batch_images, key_batch_images):
 
@@ -281,19 +170,3 @@ class ChromeCut(nn.Module):
             self.enqueue_dequeue(keys)
 
             return logits, labels
-
-@torch.inference_mode()      
-def get_distributed_keys(tensor):
-      # Create a new tensor of the same shape and data type as the input tensor but with all elements initialized to 1
-      tensor_init_one = [torch.ones_like(tensor)]
-
-      # Create a list with a length determined by the number of processes in the distributed environment
-      tensors = []
-      for _ in range(torch.distributed.get_world_size()):
-            tensors.append(tensor_init_one)
-
-      # Stores the tensors that are gathered from all processes
-      torch.distributed.all_gather(tensors, tensor, async_op=False)
-
-      # Concatenated tensors to a single tensor
-      return torch.cat(tensors, dim=0)
