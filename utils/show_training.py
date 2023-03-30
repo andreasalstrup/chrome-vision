@@ -19,10 +19,10 @@ class ShowTraining():
         self.x_epoch = []
 
         # Create figure
-        fig = plt.figure()
-        self.ax0 = fig.add_subplot(131, title="loss")
-        self.ax1 = fig.add_subplot(132, title="top1acc")
-        self.ax2 = fig.add_subplot(133, title="top5acc")
+        self.fig = plt.figure()
+        self.ax0 = self.fig.add_subplot(131, title="loss")
+        self.ax1 = self.fig.add_subplot(132, title="top1acc")
+        self.ax2 = self.fig.add_subplot(133, title="top5acc")
 
     def draw_curve(self, current_epoch):
         self.x_epoch.append(current_epoch)
@@ -38,3 +38,6 @@ class ShowTraining():
         self.y_loss["train"].append(loss)
         self.top1_rate["train"].append(top1)
         self.top5_rate["train"].append(top5)
+
+    def saveFig(self, path):
+        plt.savefig(path)
