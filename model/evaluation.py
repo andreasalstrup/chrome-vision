@@ -24,12 +24,12 @@ def train_step(model: torch.nn.Module,
       key_image = images[1].to(device)
 
       # 1. Forward pass
-      output, target = model(query_batch_images=query_image.unsqueeze(0),key_batch_images=key_image.unsqueeze(0))
-      output.requires_grad = True
+      output, target = model(query_batch_images=query_image,key_batch_images=key_image)
+      #output.requires_grad = True
 
       # 2. Calculate loss (per batch)
       loss = loss_fn(output, target)
-      train_loss += loss
+      train_loss += loss.item()
 
       acc1, acc5 = accuracy_fn(output, target, topk=(1, 5))      
       train_acc1 += acc1.item()
@@ -54,7 +54,7 @@ def train_step(model: torch.nn.Module,
    train_acc5 /= len(data_loader)
 
    print(f'Train loss: {train_loss:.5f} | Train acc1: {train_acc1:.2f}% | Train acc5: {train_acc5:.2f}%')
-   return train_loss, train_acc5
+   return train_loss, train_acc1, train_acc5
 
 
 def test_step(model: torch.nn.Module, 
