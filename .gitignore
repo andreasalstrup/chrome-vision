@@ -3,3 +3,6 @@
 data/FashionMNIST
 __pycache__
 .ipynb_checkpoints
+!model/models/*
+model/models/checkpoint.pt
+model/models/checkpoint_backup.pt
