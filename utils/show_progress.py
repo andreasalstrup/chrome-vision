@@ -1,7 +1,7 @@
 import torch
 import matplotlib.pyplot as plt
 
-class ShowTraining():
+class ShowProgress():
     def __init__(self) :
         # loss history
         self.y_loss = {}

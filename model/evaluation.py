@@ -73,14 +73,15 @@ def test_step(model: torch.nn.Module,
          # Add an extra dimension to image (tensor) in batch.
          # 3rd to 4th dimension
          # (1, C, H, W)  
-         query_image = images[0].unsqueeze(0).to(device)
-         key_image = images[1].unsqueeze(0).to(device)
+         query_image = images[0].to(device)
+         key_image = images[1].to(device)
 
          # Make predictions
          output, target = model(query_batch_images=query_image,key_batch_images=key_image)
 
          # Calculate loss 
-         test_loss += loss_fn(output, target)
+         loss = loss_fn(output, target)
+         test_loss += loss.item()
 
          # Calculate accuracy
          acc1, acc5 = accuracy_fn(output, target, topk=(1, 5))
@@ -94,10 +95,11 @@ def test_step(model: torch.nn.Module,
       
       print(f'Test loss: {test_loss:.5f} | Test acc1: {test_acc1:.2f}% | Test acc5: {test_acc5:.2f}%')
 
-   return {"model_name": model.__class__.__name__, 
-           "model_loss": test_loss.item(),
-           "model_acc1": test_acc1,
-           "model_acc5": test_acc5}
+   return test_loss, test_acc1, test_acc5
+   # return {"model_name": model.__class__.__name__, 
+   #         "model_loss": test_loss.item(),
+   #         "model_acc1": test_acc1,
+   #         "model_acc5": test_acc5}
 
 
 def train_step_label(model: torch.nn.Module, 
