@@ -20,13 +20,15 @@ def loadModel(path, model: nn.Module):
     loaded_model.load_state_dict(torch.load(f=path))
     print(f'loaded model: {loaded_model.state_dict()}')
 
-def saveCheckpoint(path, model, optimizer, epoch, showTraining, data_loader):
+def saveCheckpoint(path, model, optimizer, epoch, showTraining, showTesting, train_data_loader, test_data_loader):
     torch.save({
         'model_state_dict': model.state_dict(),
         'optimizer_state_dict': optimizer.state_dict(),
         'epoch': epoch,
         'ShowTraining': showTraining,
-        'data_loader': data_loader
+        'ShowTesting': showTesting,
+        'train_data_loader': train_data_loader,
+        'test_data_loader': test_data_loader
     }, path)
 
 def loadCheckpoint(path, model, optimizer):
@@ -35,8 +37,10 @@ def loadCheckpoint(path, model, optimizer):
     optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
     epoch = checkpoint['epoch']
     showTraining = checkpoint['ShowTraining']
-    data_loader = checkpoint['data_loader']
-    return model, optimizer, epoch, showTraining, data_loader
+    showTesting = checkpoint['ShowTesting']
+    train_data_loader = checkpoint['data_loader']
+    test_data_loader = checkpoint['test_data_loader']
+    return model, optimizer, epoch, showTraining, showTesting, train_data_loader, test_data_loader
 
 def print_train_time(start: float, end: float, device: torch.device = None):
     total_time = end - start
