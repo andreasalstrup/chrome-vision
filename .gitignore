@@ -6,3 +6,6 @@ __pycache__
 !model/models/*
 model/models/checkpoint.pt
 model/models/checkpoint_backup.pt
+data/leftImg8bit/test
+data/leftImg8bit/train
+data/leftImg8bit/val
