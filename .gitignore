@@ -2,10 +2,12 @@
 *.pyc
 data/FashionMNIST
 __pycache__
+.vscode
 .ipynb_checkpoints
 !model/models/*
 model/models/checkpoint.pt
 model/models/checkpoint_backup.pt
+model/models/*.pt
 data/leftImg8bit/test
 data/leftImg8bit/train
 data/leftImg8bit/val
