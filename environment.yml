@@ -1,6 +1,23 @@
 name: cv
+channels:
+  - conda-forge
+  - pytorch
 dependencies:
+  - pytorch
+  - torchvision
+  - torchaudio
+  - scikit-learn
   - python=3.10.*
+  - jupyter
   - numpy=1.23.*
   - pandas=1.5.*
+  - opencv
+  - matplotlib
+  - seaborn
+  - IPython
+  - Pillow
+  - psutil
+  - tqdm
+  - libpng
+  - jpeg
   - pip
