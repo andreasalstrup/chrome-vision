@@ -38,7 +38,7 @@ def loadCheckpoint(path, model, optimizer):
     epoch = checkpoint['epoch']
     showTraining = checkpoint['ShowTraining']
     showTesting = checkpoint['ShowTesting']
-    train_data_loader = checkpoint['data_loader']
+    train_data_loader = checkpoint['train_data_loader']
     test_data_loader = checkpoint['test_data_loader']
     return model, optimizer, epoch, showTraining, showTesting, train_data_loader, test_data_loader
 
