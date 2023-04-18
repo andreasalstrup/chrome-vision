@@ -136,7 +136,7 @@ class ChromeMoCo(nn.Module):
             # Add a new dimentions at then end of the tensor and make it a 2D tensor
             positive_logits = positive_logits.unsqueeze(dim=-1)
 
-            # Create a clone of the query thereby not affecting the original tensor or its gradients
+            # Create a clone of the queue thereby not affecting the original tensor or its gradients
             query_clone = self.queue.clone().detach()
 
             # for n in range(dim)
@@ -158,7 +158,7 @@ class ChromeMoCo(nn.Module):
             logits = torch.cat([positive_logits, negative_logits], dim=1)
             
             # Apply softmax temperature scaling
-            # Deviding softmax_temp with each value in tensor  
+            # Dividing softmax_temp with each value in tensor  
             logits /= self.softmax_temp
 
             # Instantiate a tensor of zeros of the size logits.shape[0] (rows in logits = number of examples in batch)
