@@ -1,6 +1,7 @@
 import torch
 from torch import device, nn
 from tqdm.auto import tqdm
+import math
 
 
 def train_step(model: torch.nn.Module, 
@@ -171,3 +172,7 @@ def test_step_label(model: torch.nn.Module,
    return {"model_name": model.__class__.__name__, 
            "model_loss": loss.item(),
            "model_acc": acc}
+
+def adjust_learning_rate(optimizer, epoch, epochs, lr):
+   lr *= 0.5 * (1.0 + math.cos(math.pi * epoch / epochs))     
+   return optimizer
