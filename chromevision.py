@@ -1,6 +1,9 @@
 import torch
 import cv2
-
+import numpy as np
+import chrome_cut
+import utilities.chromeUtils as utilis
+import utilities.transforms as transforms
 #########
 #Test setup
 import torchvision.models as models
@@ -43,82 +46,55 @@ model = ChromeMoCo(base_encoder=ENCODER,
 
 model.load_state_dict(torch.load("model/models/ChromeMoCo_BatchSize256_LR0.001_ImageSize64_Epochs200.pt", map_location=torch.device(device)))
 
-from torchvision import transforms
-from utilities.transforms import ContrastiveTransform
 
-transform_MoCoV1 = ContrastiveTransform(
-                        transforms.Compose([
-                            transforms.ToPILImage(),
-                            transforms.Resize((IMAGE_RESIZE, IMAGE_RESIZE)),
-                            transforms.RandomResizedCrop(IMAGE_RESIZE, scale=(0.2, 1.0)), # 224 -> 64 
-                            transforms.RandomGrayscale(p=0.2),
-                            transforms.ColorJitter(0.4, 0.4, 0.4, 0.4),
-                            transforms.RandomHorizontalFlip(),
-                            transforms.ToTensor(),
-                            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-                            ])
-                        )
 #######
 
 class Chromevision():
-    def __init__(self, model, cutter, merger):
+    def __init__(self, model, cutter):
         self.model = model
-        self.cutter = cutter
-        self.merger = merger
         self.cutterModel = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True, trust_repo=True)
+        #Does not currently use a specific cutter because it would be be
+        #Harder to read and by default worse performance      
 
-    def green(self, image_path):
-         image = cv2.imread(image_path)
-         return self.model(image)
-    
-    def chrome(self, image_path):
-        cutterModel = self.cutterModel
+    def identify(self, image_path):
+        encoder = self.model.encoder_query
+        self.model.eval() #We swap to the mode we need (evaluation)
+        encoder.eval()
 
         image = cv2.imread(image_path)
+        cuts = self.cutterModel(image)
 
-        cuts = cutterModel(image)
-        
-        for cut in cuts.xyxy[0]:     # Goes through the different cuts corner values           
+        for cut in cuts.xyxy[0].data:     # Goes through the different cuts corner values           
             x1, y1, x2, y2 = cut[:4]
             # Adding the crop to the boxes list
             imageCut = image[int(y1):int(y2),int(x1):int(x2)].copy()
-            transformedCut = transform_MoCoV1(imageCut)
             
-            self.model.train(False)
-            queryImage = transformedCut[0].unsqueeze(0)
-            keyImage = transformedCut[1].unsqueeze(0)
-            # print(keyImage.shape)
-            # testing = keyImage.unsqueeze(0)
-            # print(testing.shape)
-            output, target = model(query_batch_images=queryImage,key_batch_images=keyImage)
+            #imageCut = utilis.scaleCuts(cut) #urrently does not work, faulty implementation?
+            if imageCut.any == None:
+                continue
+            imageCut = transforms.evalTransform(imageCut).unsqueeze(0).to(device)
 
-            startPoint_rectangle = (int(x1), int(y1))
+            with torch.no_grad():
+                features = encoder(imageCut)
+                probabilities = torch.softmax(features, dim=1)
+
+            predicted_class = np.argmax(probabilities.cpu().numpy())
+
+            startPoint_rectangle = (int(x1), int(y1)) #We add the box and class to the original image
             endPoint_rectangle = (int(x2), int(y2))
             color_bgr = (0, 255, 0)
             thickness = 2
 
-            cv2.rectangle(image, startPoint_rectangle, endPoint_rectangle, color_bgr, thickness)
-            monka = torch.nn.Softmax(1)
-            monka2 = monka(output.data)                        
+            cv2.rectangle(image, startPoint_rectangle, endPoint_rectangle, color_bgr, thickness)                     
 
-            _, pred = output.topk(5, 1, True)
-            pred = pred.t()
-            tal = pred[0].item()
-
-            text = ""
-
-            for elem in pred:
-                text += str(elem.item())
-                text += ", "
             org = (int(x1), int(y1) - 10)
             color_bgr = (255, 0, 0)
             frontScale = 0.5            
-            cv2.putText(image, text, org, cv2.FONT_HERSHEY_SIMPLEX, frontScale, color_bgr, thickness)
-            # A
+            cv2.putText(image, str(predicted_class), org, cv2.FONT_HERSHEY_SIMPLEX, frontScale, color_bgr, thickness)
         return image
 
-mal = Chromevision(model, None, None)                
-hej = mal.chrome("data/test1.png")
+mal = Chromevision(model, chrome_cut.ChromeCut())                
+hej = mal.identify("data/E45Vejle_1011.jpg")
 
 cv2.imshow('Result', hej)
 cv2.waitKey(0)
