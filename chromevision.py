@@ -1,8 +1,9 @@
 import torch
 import cv2
 import numpy as np
-import utilities.chromeUtils as utilis
-import utilities.transforms as transforms
+import chrome_utils.model_utils as model_utils
+import chrome_utils.cut_utils as cut_utils
+import chrome_utils.transforms as transforms
 
 class Chromevision():
     def __init__(self, model, cutter):
@@ -25,7 +26,7 @@ class Chromevision():
             # Adding the crop to the boxes list
             imageCut = image[int(y1):int(y2),int(x1):int(x2)].copy()
             
-            imageCut = utilis.scaleCuts(imageCut)
+            imageCut = cut_utils.scaleCuts(imageCut)
             if imageCut is None:
                 continue
             imageCut = transforms.evalTransform(imageCut).unsqueeze(0).to(self.device)

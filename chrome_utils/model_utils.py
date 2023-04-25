@@ -1,6 +1,5 @@
 import torch
 import numpy as np
-import cv2
 from torch import nn
 from sklearn.metrics import accuracy_score
 from pathlib import Path
@@ -39,7 +38,7 @@ def loadCheckpoint(path, model, optimizer):
     epoch = checkpoint['epoch']
     showTraining = checkpoint['ShowTraining']
     showTesting = checkpoint['ShowTesting']
-    train_data_loader = checkpoint['data_loader']
+    train_data_loader = checkpoint['train_data_loader']
     test_data_loader = checkpoint['test_data_loader']
     return model, optimizer, epoch, showTraining, showTesting, train_data_loader, test_data_loader
 
@@ -84,10 +83,3 @@ def accuracy_top_k(output, target, topk=(1,)):
             correct_k = correct[:k].reshape(-1).float().sum(0, keepdim=True) # view() -> reshape()
             res.append(correct_k.mul_(100.0 / batch_size))
         return res
-    
-def scaleCuts(img):
-    height, width, channels = img.shape
-    ##### We ensure the cuts are of a decent size, currently no down/up-scaling
-    if height * width < 32 * 32: #We remove very small cuts 
-        return None
-    return img
