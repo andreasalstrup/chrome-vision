@@ -1,7 +1,7 @@
 import os
 import pandas as pd
 import cv2
-import chrome_utils.model_utils as model_utils
+import chrome_utils.cut_utils as cut_utils
 from torch.utils.data import Dataset
 
 import torch
@@ -33,7 +33,7 @@ class ChromeCut():
                 x1, y1, x2, y2 = result[:4]    
                 # Adding the crop to the boxes list
                 croppedImage = image[int(y1):int(y2)-1,int(x1):int(x2)].copy()
-                croppedImage  = model_utils.scaleCuts(croppedImage)
+                croppedImage  = cut_utils.scaleCuts(croppedImage)
                 if croppedImage is None:
                     continue
                 cv2.imwrite(f"{new_img_dir}/cut/{name}/{name}{numOfCuts}.jpg", croppedImage)
