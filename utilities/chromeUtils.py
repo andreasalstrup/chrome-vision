@@ -87,12 +87,7 @@ def accuracy_top_k(output, target, topk=(1,)):
     
 def scaleCuts(img):
     height, width, channels = img.shape
-    ##### We ensure the cuts are of a decent size
+    ##### We ensure the cuts are of a decent size, currently no down/up-scaling
     if height * width < 32 * 32: #We remove very small cuts 
         return None
-    if height > 150 | width > 150: #We downscale pictures with a side bigger than 150
-        scaleFactor = 150 / max(height, width)
-        return cv2.resize(img, (height * scaleFactor, width * scaleFactor))
-    if height < 64 | width < 64: #We upscale pictures with a side smaller than 64
-        scaleFactor = 64 / min(height, width)
-        return cv2.resize(img, (height * scaleFactor, width * scaleFactor))
+    return img

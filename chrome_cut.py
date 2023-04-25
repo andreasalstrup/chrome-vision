@@ -34,7 +34,7 @@ class ChromeCut():
                 # Adding the crop to the boxes list
                 croppedImage = image[int(y1):int(y2)-1,int(x1):int(x2)].copy()
                 croppedImage  = utilis.scaleCuts(croppedImage)
-                if croppedImage == None:
+                if croppedImage is None:
                     continue
                 cv2.imwrite(f"{new_img_dir}/cut/{name}/{name}{numOfCuts}.jpg", croppedImage)
                 numOfCuts += 1
@@ -43,30 +43,3 @@ class ChromeCut():
         for ind in range(numOfCuts):
             writer.writerow([f"{name}{ind}.jpg"])
         f.close
-
-    def CutPictureInMemory(self, file_path): 
-        # Cuts the given image with the chosen mode (default yolov5).
-        # The cuts are returned and not saved.
-        #Parameters: 
-        #   file_path (str): The file path of the image          
-        image = cv2.imread(file_path)
-        model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True, trust_repo=True)
-        cuts = model(image)
-        result = []
-        for cut in cuts.xyxy[0]:     #Goes through the different cuts corner values           
-            x1, y1, x2, y2 = cut[:4]  
-                # Adding the crop to the boxes list
-                ##### We ensure the cuts are of a decent size
-            height, width, channels = imageCut.shape
-            if height * width < 32 * 32: #We remove very small cuts 
-                continue
-            if height < 64 | width < 64: #We upscale pictures with a side smaller than 64
-                scaleFactor = 64 / min(height, width)
-                imageCut = cv2.resize(imageCut, (height * scaleFactor, width * scaleFactor))
-
-            if height > 150 | width > 150: #We downscale pictures with a side bigger than 150
-                scaleFactor = 150 / max(height, width)
-                imageCut = cv2.resize(imageCut, (height * scaleFactor, width * scaleFactor))
-            #####
-            result += image[int(y1):int(y2)-1,int(x1):int(x2)].copy()            
-        return result
