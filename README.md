@@ -3,10 +3,9 @@
 Chrome Vision is an <b>object detection and image classification model for self-supervised learning.</b> 
 
 Created as a bachelor project at **AAU** <a href="https://www.aau.dk/">**(Aalborg University)**</a>, with inspiration from <a href="https://github.com/facebookresearch/moco">**FacebookResearch - MoCo**</a>.
-___
+
 ## Getting started
 <ul>
-<li><a href="https://computingforgeeks.com/how-to-install-python-on-ubuntu-linux/">Python 3.11 on Ubuntu</a></li>
 <li><a href="https://pytorch.org/get-started/locally/">Pytorch with CUDA</a></li>
 </ul>
 
@@ -32,7 +31,12 @@ conda activate cv
 ___
 ## Contact 
 Directly here on GitHub or by student mail. 
-- aalstr20@student.aau.dk
-- malgre20@student.aau.dk
-- ebrand20@student.aau.dk
-- dala19@student.aau.dk
+- <aalstr20@student.aau.dk>
+- <malgre20@student.aau.dk>
+- <ebrand20@student.aau.dk>
+- <dala19@student.aau.dk>
+
+
+
+![OUR MASCOT](https://mdg.imgix.net/assets/images/tux.png)
+
