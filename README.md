@@ -1,28 +1,38 @@
-# chrome-vision
+# Chrome Vision
 
-chrome-vision is an object detection and image classification model. 
+Chrome Vision is an <b>object detection and image classification model for self-supervised learning.</b> 
 
-chrome-vision is our bachelor project at AAU (Aalborg University), with inspiration from <a href="https://github.com/facebookresearch/moco">FacebookResearch - MoCo</a>
+Created as a bachelor project at **AAU** <a href="https://www.aau.dk/">**(Aalborg University)**</a>, with inspiration from <a href="https://github.com/facebookresearch/moco">**FacebookResearch - MoCo**</a>.
+___
+## Getting started
+<ul>
+<li><a href="https://computingforgeeks.com/how-to-install-python-on-ubuntu-linux/">Python 3.11 on Ubuntu</a></li>
+<li><a href="https://pytorch.org/get-started/locally/">Pytorch with CUDA</a></li>
+</ul>
 
-## Getting started (prerequisites)
-<a href="https://computingforgeeks.com/how-to-install-python-on-ubuntu-linux/">Python 3.11 on Ubuntu</a>
+After installing the necessary software, fork the repository using <a href="https://git-scm.com/">**git**</a>.
+<br>
+Use the commands below to create a working environment while inside the folder.
 
-<a href="https://pytorch.org/get-started/locally/">Pytorch with CUDA</a>  
-
-After the necessary software has been installed, fork the repository using git, and use the commands below to create a working environment.
-
-1. Create environment
+## 1. Create environment
 ```bash
 conda env create -f environment.yml
 # conda env remove -n cv
 ```
-2. List environment
+## 2. List environment
 ```bash
 conda env list
 # confirm that base and cv are installed
 ```
-3. Activate enviroment
+## 3. Activate enviroment
 ```bash
 conda activate cv
 # conda deactivate
 ```
+___
+## Contact 
+Directly here on GitHub or by student mail. 
+- aalstr20@student.aau.dk
+- malgre20@student.aau.dk
+- ebrand20@student.aau.dk
+- dala19@student.aau.dk
