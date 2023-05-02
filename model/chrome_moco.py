@@ -136,14 +136,14 @@ class ChromeMoCo(nn.Module):
             # Add a new dimentions at then end of the tensor and make it a 2D tensor
             positive_logits = positive_logits.unsqueeze(dim=-1)
 
-            # Create a clone of the query thereby not affecting the original tensor or its gradients
-            query_clone = self.queue.clone().detach()
+            # Create a clone of the queue thereby not affecting the original tensor or its gradients
+            queue_clone = self.queue.clone().detach()
 
             # for n in range(dim)
             #     for k in range(dim)
             #           total = 0
             #           for c in range(dim)
-            #                 total += query[n,c]*query_clone[c,k]
+            #                 total += query[n,c]*queue_clone[c,k]
             #
             #     negative_logits[n,k] = total
             #
@@ -151,14 +151,14 @@ class ChromeMoCo(nn.Module):
             # Summation Indices: c
             #
             # Output dimension: NxK
-            negative_logits = torch.einsum("nc,ck->nk", [query, query_clone])
+            negative_logits = torch.einsum("nc,ck->nk", [query, queue_clone])
 
             # Concatenate positive_logits and negative_logits along the secound dimension (columns)
             # Output dimension: Nx(1+K), (rows)x(columns)
             logits = torch.cat([positive_logits, negative_logits], dim=1)
             
             # Apply softmax temperature scaling
-            # Deviding softmax_temp with each value in tensor  
+            # Dividing softmax_temp with each value in tensor  
             logits /= self.softmax_temp
 
             # Instantiate a tensor of zeros of the size logits.shape[0] (rows in logits = number of examples in batch)
