@@ -130,7 +130,6 @@ def eval_model(name: str,
          acc1, acc5 = accuracy_fn(output, target, topk=(1, 5))
          test_acc1 += acc1.item()
          test_acc5 += acc5.item()
-         break
 
       # Divide total train loss by length of train dataloader (average loss per batch per epoch)
       test_loss /= len(data_loader)
