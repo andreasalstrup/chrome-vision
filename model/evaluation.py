@@ -143,5 +143,5 @@ def eval_model(name: str,
 
 
 def adjust_learning_rate(optimizer, epoch, epochs, lr):
-   lr *= 0.5 * (1.0 + math.cos(math.pi * epoch / epochs))     
+   optimizer.param_groups[0]['lr'] *= 0.5 * (1.0 + math.cos(math.pi * epoch / epochs))     
    return optimizer

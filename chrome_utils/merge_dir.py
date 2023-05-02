@@ -15,17 +15,18 @@ class MergeDir:
 
         for item in os.listdir(src_dir):
             if os.path.isdir(os.path.join(src_dir, item)):
-                self.__merge_dir(f"{src_dir}/{item}", dst_dir, dst_index)
+                self.__merge_dir(os.path.join(src_dir, item), dst_dir, dst_index)
             else:
-                file = f"{src_dir}/{item}"
+                file = os.path.join(src_dir, item)
                 shutil.copy(file, dst_dir)
                 self.__createIndexFile(item, dst_index)
 
     def __createIndexFile(self, item, path):
-        if not os.path.exists(f"{path}"):
-            file = open(f"{path}", "x")
+        if not os.path.exists(path):
+            os.makedirs(os.path.dirname(path))
+            file = open(path, "x")
         
-        with open(f"{path}", "a") as file:
+        with open(path, "a") as file:
             file.write(item + '\n')
 
         file.close()
