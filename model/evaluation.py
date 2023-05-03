@@ -1,7 +1,9 @@
+import os
 import torch
 from torch import device, nn
 from tqdm.auto import tqdm
 import math
+import pandas as pd
 
 
 def train_step(model: torch.nn.Module, 
@@ -45,16 +47,11 @@ def train_step(model: torch.nn.Module,
       # 5. Optimizer step
       optimizer.step()
 
-      # train_loss /= len(images)
-      # train_acc1 /= len(images)
-      # train_acc5 /= len(images)
-      
    # Divide total train loss by length of train dataloader (average loss per batch per epoch)
    train_loss /= len(data_loader)
    train_acc1 /= len(data_loader)
    train_acc5 /= len(data_loader)
 
-   print(f'Train loss: {train_loss:.5f} | Train acc1: {train_acc1:.2f}% | Train acc5: {train_acc5:.2f}%')
    return train_loss, train_acc1, train_acc5
 
 
@@ -93,8 +90,6 @@ def test_step(model: torch.nn.Module,
       test_loss /= len(data_loader)
       test_acc1 /= len(data_loader)
       test_acc5 /= len(data_loader)
-      
-      print(f'Test loss: {test_loss:.5f} | Test acc1: {test_acc1:.2f}% | Test acc5: {test_acc5:.2f}%')
 
    return test_loss, test_acc1, test_acc5
 
@@ -140,6 +135,39 @@ def eval_model(name: str,
            "model_loss": test_loss,
            "model_acc1": test_acc1,
            "model_acc5": test_acc5}
+
+
+def evaluate_models(model: torch.nn.Module, 
+                    models_dir: str, 
+                    data_loader: torch.utils.data.DataLoader,
+                    loss_fn: torch.nn.Module,
+                    accuracy_fn,
+                    device: torch.device = device):
+   
+   # Get models in folder
+   MODELS = []
+   for file in os.listdir(models_dir):
+      if file.endswith(".pt"):
+         MODELS.append(file)
+
+   # Loading models
+   RESULTS = []
+   for item in MODELS:
+      PATH = os.path.join(models_dir, item)
+   
+      print(f"Loading model: {item}")
+
+      model.load_state_dict(torch.load(PATH, map_location=torch.device(device)))
+      model_result = eval_model(name=item,
+                                 model=model,
+                                 data_loader=data_loader,
+                                 loss_fn=loss_fn,
+                                 accuracy_fn=accuracy_fn,
+                                 device=device)
+      
+      model_result = pd.DataFrame([model_result])
+      RESULTS.append(model_result)
+   return pd.concat(RESULTS)
 
 
 def adjust_learning_rate(optimizer, epoch, epochs, lr):
