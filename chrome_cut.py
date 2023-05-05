@@ -16,14 +16,13 @@ class ChromeCut():
         #   annotations_file (str): The file path of the csv file
         #   img_dir (str): The file path of the directory of the images
         #   name (str): The name to give the new folder and images
-        if os.path.exists(f"{new_img_dir}/cut/{name}"):
-            return        
-        if not(os.path.exists(f"{new_img_dir}/cut")):
-            os.mkdir(f"{new_img_dir}/cut")
-        os.mkdir(f"{new_img_dir}/cut/{name}")
+        if os.path.exists(f"{new_img_dir}"):
+            return  
+        if not(os.path.exists(f"{new_img_dir}")):
+            os.mkdir(f"{new_img_dir}")
+            
         model = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True, trust_repo=True)
         numOfCuts = 0
-        
         img_names = pd.read_csv(annotations_file)        
         for i in range(len(img_names)):
             img_path = os.path.join(img_dir, img_names.iloc[i, 0])
@@ -36,7 +35,7 @@ class ChromeCut():
                 croppedImage  = cut_utils.scaleCuts(croppedImage)
                 if croppedImage is None:
                     continue
-                cv2.imwrite(f"{new_img_dir}/cut/{name}/{name}{numOfCuts}.jpg", croppedImage)
+                cv2.imwrite(f"{new_img_dir}/{name}{numOfCuts}.jpg", croppedImage)
                 numOfCuts += 1
         f = open(f'{new_annotations_file_location}/{name}.csv', 'w', newline='')
         writer = csv.writer(f)
