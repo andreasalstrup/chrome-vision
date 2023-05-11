@@ -10,7 +10,7 @@ from torch import nn
 
 # Create a neural network module subclass
 class ChromeMoCo(nn.Module):
-      def __init__(self, base_encoder, feature_dim=128, queue_size=65536, momentum=0.999, softmax_temp=0.07):
+      def __init__(self, base_encoder, feature_dim=(128, 5), queue_size=65536, momentum=0.999, softmax_temp=0.07):
             """
             # feature_dim: uique classes in the target dataset
             # queue_size: number of keys in queue
@@ -26,8 +26,8 @@ class ChromeMoCo(nn.Module):
             self.softmax_temp = softmax_temp
 
             # Create query and key encoder
-            self.encoder_query = base_encoder(weights=None, num_classes=feature_dim)
-            self.encoder_key = base_encoder(weights=None, num_classes=feature_dim)
+            self.encoder_query = base_encoder(weights=None, num_classes=feature_dim[0])
+            self.encoder_key = base_encoder(weights=None, num_classes=feature_dim[0])
 
             # Adding MLP Projection Head for representation
             # Get the dimension of the first fully connected layer 
@@ -41,7 +41,9 @@ class ChromeMoCo(nn.Module):
                   # max(0, out_features)
                   nn.ReLU(),
                   # A stack of fully connected layers
-                  self.encoder_query.fc
+                  self.encoder_query.fc,
+                  # Final classification layer
+                  nn.Linear(feature_dim[0], feature_dim[1])
             )
 
             # Setup layers in the key encoder
@@ -52,7 +54,9 @@ class ChromeMoCo(nn.Module):
                   # max(0, out_features)
                   nn.ReLU(),
                   # A stack of fully connected layers
-                  self.encoder_key.fc
+                  self.encoder_key.fc,
+                  # Final classification layer
+                  nn.Linear(feature_dim[0], feature_dim[1])
             )
             
             # Sequence query encoder and key encoder as tuples
@@ -64,7 +68,7 @@ class ChromeMoCo(nn.Module):
 
             # Create queue
             # Initialize with random numbers
-            self.register_buffer("queue", torch.randn(feature_dim, queue_size))
+            self.register_buffer("queue", torch.randn(feature_dim[0], queue_size))
             # Normalize all tensors in the queue
             self.queue = nn.functional.normalize(input=self.queue, dim=0)
 
