@@ -69,5 +69,11 @@ class Chromevision():
             color_bgr = (255, 0, 0)
             frontScale = 0.5            
             cv2.putText(image, str(predicted_class), org, cv2.FONT_HERSHEY_SIMPLEX, frontScale, color_bgr, thickness)
-            
+
+            # Add the probability to the image
+            org = (int(x1), int(y1) - 30)
+            color_bgr = (255, 0, 0)
+            frontScale = 0.5
+            cv2.putText(image, str(probabilities.cpu().numpy()[0][predicted_class]), org, cv2.FONT_HERSHEY_SIMPLEX, frontScale, color_bgr, thickness)
+
         return image
