@@ -45,7 +45,7 @@ class Chromevision():
             cv2.rectangle(image, startPoint_rectangle, endPoint_rectangle, color_bgr, thickness)                     
 
             org = (int(x1), int(y1) - 10)
-            color_bgr = (255, 0, 0)
+            color_bgr = (0, 0, 255)
             frontScale = 0.5            
             cv2.putText(image, str(predicted_class), org, cv2.FONT_HERSHEY_SIMPLEX, frontScale, color_bgr, thickness)
         return image
