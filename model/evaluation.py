@@ -23,11 +23,11 @@ def train_step(model: torch.nn.Module,
       # Add an extra dimension to image (tensor) in batch.
       # 3rd to 4th dimension
       # (1, C, H, W)  
-      query_image = images[0].to(device)
-      key_image = images[1].to(device)
+      query_images = images[0].to(device)
+      key_images = images[1].to(device)
 
       # 1. Forward pass
-      output, target = model(query_batch_images=query_image,key_batch_images=key_image)
+      output, target = model(query_batch_images=query_images,key_batch_images=key_images)
       #output.requires_grad = True
 
       # 2. Calculate loss (per batch)
