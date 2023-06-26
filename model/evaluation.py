@@ -20,9 +20,7 @@ def train_step(model: torch.nn.Module,
    # X: image (features)
    for batch, images in enumerate(tqdm(data_loader)):
 
-      # Add an extra dimension to image (tensor) in batch.
-      # 3rd to 4th dimension
-      # (1, C, H, W)  
+      # (batch_size, C, H, W)  
       query_images = images[0].to(device)
       key_images = images[1].to(device)
 
