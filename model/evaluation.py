@@ -23,7 +23,7 @@ def train_step(model: torch.nn.Module,
       # Add an extra dimension to image (tensor) in batch.
       # 3rd to 4th dimension
       # (1, C, H, W)  
-      query_image = images[0].to(device) ### Are there only 2 elements in images?
+      query_image = images[0].to(device)
       key_image = images[1].to(device)
 
       # 1. Forward pass
