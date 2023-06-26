@@ -17,7 +17,6 @@ def train_step(model: torch.nn.Module,
     
    model.train()
 
-   # X: image (features)
    for batch, images in enumerate(tqdm(data_loader)):
 
       # (batch_size, C, H, W)
